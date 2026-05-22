@@ -5,6 +5,7 @@ import { clearAuth, getUser } from '@/lib/auth'
 
 const NAV = [
   { href: '/dashboard',     label: 'Dashboard',       icon: GridIcon },
+  { href: '/channels',      label: 'Canales',          icon: ChannelsIcon },
   { href: '/leads',         label: 'Leads',            icon: UsersIcon },
   { href: '/conversations', label: 'Conversaciones',   icon: ChatIcon },
 ]
@@ -76,6 +77,16 @@ export default function Sidebar() {
         </button>
       </div>
     </aside>
+  )
+}
+
+function ChannelsIcon({ size = 16, className = '' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 16 16" fill="none" className={className}>
+      <rect x="1" y="5" width="4" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.5"/>
+      <rect x="6" y="2" width="4" height="12" rx="1.5" stroke="currentColor" strokeWidth="1.5"/>
+      <rect x="11" y="4" width="4" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.5"/>
+    </svg>
   )
 }
 

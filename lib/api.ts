@@ -66,6 +66,29 @@ export async function sendMessage(id: string, message: string) {
   })
 }
 
+// ── Channels ──────────────────────────────────────────────────────────────────
+export async function getChannels() {
+  return request<{ data: Channel[] }>('/api/channels')
+}
+
+export async function getChannel(id: string) {
+  return request<{ data: Channel }>(`/api/channels/${id}`)
+}
+
+export async function saveFlowDefinition(channelId: string, flow: FlowDefinition) {
+  return request(`/api/channels/${channelId}/flow`, {
+    method: 'PUT',
+    body: JSON.stringify({ flow_definition: flow }),
+  })
+}
+
+export async function saveBotConfig(channelId: string, config: Partial<BotConfig>) {
+  return request(`/api/channels/${channelId}/config`, {
+    method: 'PUT',
+    body: JSON.stringify(config),
+  })
+}
+
 // ── Types ─────────────────────────────────────────────────────────────────────
 export interface DashboardStats {
   leads:         { total: number; thisMonth: number; fullProfile: number }
@@ -107,4 +130,50 @@ export interface Message {
   role:        'user' | 'assistant' | 'human'
   content:     string
   created_at?: string
+}
+
+export interface Channel {
+  id:              string
+  org_id:          string
+  type:            'whatsapp' | 'instagram' | 'facebook'
+  name:            string
+  identifier:      string
+  phone_number_id?: string
+  status:          'active' | 'inactive'
+  created_at:      string
+  bot_config?:     BotConfig
+}
+
+export interface BotConfig {
+  id:             string
+  channel_id:     string
+  bot_type:       'flow' | 'agent' | 'dual'
+  persona_name:   string
+  business_name:  string
+  system_prompt?: string
+  services?:      { name: string; price: string; description: string }[]
+  timezone:       string
+  business_hours: { days: number[]; start: number; end: number }
+  language:       string
+  flow_definition?: FlowDefinition
+}
+
+export interface FlowDefinition {
+  nodes: FlowNodeDef[]
+  edges: FlowEdgeDef[]
+}
+
+export interface FlowNodeDef {
+  id:       string
+  type:     string
+  position: { x: number; y: number }
+  data:     Record<string, unknown>
+}
+
+export interface FlowEdgeDef {
+  id:            string
+  source:        string
+  target:        string
+  sourceHandle?: string | null
+  targetHandle?: string | null
 }

@@ -1,6 +1,6 @@
 'use client'
 import '@xyflow/react/dist/style.css'
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import {
   ReactFlow,
   Background,
@@ -19,7 +19,7 @@ import {
   type Connection,
   type NodeProps,
 } from '@xyflow/react'
-import { saveFlowDefinition } from '@/lib/api'
+import { saveFlowDefinition, getChannel } from '@/lib/api'
 
 // ── Constants for MenuNode handle positioning ─────────────────────────────────
 
@@ -399,20 +399,50 @@ const EDGE_DEFAULTS = {
 
 export default function FlowBuilder({
   channelId,
-  channelName = 'Canal',
-  initialNodes = INIT_NODES,
-  initialEdges = INIT_EDGES,
+  channelName: initialChannelName = 'Canal',
 }: {
   channelId: string
   channelName?: string
-  initialNodes?: Node[]
-  initialEdges?: Edge[]
 }) {
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes)
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges)
+  const [nodes, setNodes, onNodesChange] = useNodesState(INIT_NODES)
+  const [edges, setEdges, onEdgesChange] = useEdgesState(INIT_EDGES)
   const [selected, setSelected]         = useState<Node | null>(null)
   const [saving, setSaving]             = useState(false)
   const [saved, setSaved]               = useState(false)
+  const [channelName, setChannelName]   = useState(initialChannelName)
+  const [loading, setLoading]           = useState(true)
+
+  // Carga inicial: trae el flow_definition guardado del canal
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      try {
+        const res = await getChannel(channelId)
+        if (cancelled) return
+        const ch = res?.data
+        setChannelName(ch?.name || initialChannelName)
+
+        const flow = ch?.bot_config?.flow_definition as
+          | { nodes?: Array<Record<string, unknown>>; edges?: Array<Record<string, unknown>> }
+          | undefined
+
+        if (flow?.nodes && flow.nodes.length > 0) {
+          const restored = flow.nodes.map(n => ({
+            ...(n as object),
+            deletable: (n as { id: string }).id !== 'start',
+          })) as Node[]
+          setNodes(restored)
+          setEdges(((flow.edges || []) as unknown) as Edge[])
+        }
+      } catch (err) {
+        console.error('[FlowBuilder] error cargando flujo guardado:', err)
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    })()
+    return () => { cancelled = true }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [channelId])
 
   const onConnect = useCallback(
     (conn: Connection) =>
@@ -481,6 +511,14 @@ export default function FlowBuilder({
     } finally {
       setSaving(false)
     }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex h-full items-center justify-center" style={{ background: '#080808' }}>
+        <div className="text-sm text-[#555]">Cargando flujo guardado...</div>
+      </div>
+    )
   }
 
   return (

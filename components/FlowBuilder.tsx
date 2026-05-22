@@ -455,14 +455,29 @@ export default function FlowBuilder({
   async function handleSave() {
     setSaving(true)
     try {
-      await saveFlowDefinition(channelId, {
-        nodes: nodes.map(n => ({ id: n.id, type: n.type!, position: n.position, data: n.data as Record<string, unknown> })),
-        edges: edges.map(e => ({ id: e.id!, source: e.source, target: e.target, sourceHandle: e.sourceHandle, targetHandle: e.targetHandle })),
-      })
+      const payload = {
+        nodes: nodes.map(n => ({
+          id: n.id,
+          type: n.type!,
+          position: n.position,
+          data: n.data as Record<string, unknown>,
+        })),
+        edges: edges.map(e => ({
+          id: e.id!,
+          source: e.source,
+          target: e.target,
+          sourceHandle: e.sourceHandle ?? null,
+          targetHandle: e.targetHandle ?? null,
+        })),
+      }
+      console.log('[FlowBuilder] saving:', JSON.stringify(payload, null, 2))
+      await saveFlowDefinition(channelId, payload)
       setSaved(true)
       setTimeout(() => setSaved(false), 2500)
-    } catch {
-      alert('Error al guardar — revisa la conexión con el servidor')
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err)
+      console.error('[FlowBuilder] save error:', err)
+      alert(`Error al guardar: ${msg}`)
     } finally {
       setSaving(false)
     }

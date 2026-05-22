@@ -151,6 +151,8 @@ export interface BotConfig {
   persona_name:   string
   business_name:  string
   system_prompt?: string
+  analyze_prompt?: string
+  mode_instructions?: Record<string, string>
   services?:      { name: string; price: string; description: string }[]
   timezone:       string
   business_hours: { days: number[]; start: number; end: number }

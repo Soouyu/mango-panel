@@ -71,7 +71,6 @@ function TabGeneral({ cfg, setCfg, channel, onToggleStatus, toggling }: {
   toggling: boolean
 }) {
   const isActive = channel.status === 'active'
-  const planInfo = PLAN_INFO[cfg.bot_type as keyof typeof PLAN_INFO] || PLAN_INFO.dual
 
   return (
     <div className="space-y-6">
@@ -355,50 +354,146 @@ function TabHorarios({ cfg, setCfg }: { cfg: Partial<BotConfig>; setCfg: (c: Par
   )
 }
 
-function TabAvanzado({ cfg, setCfg }: { cfg: Partial<BotConfig>; setCfg: (c: Partial<BotConfig>) => void }) {
+const MODES_INFO = [
+  { key: 'GREETING',  label: 'Bienvenida',      icon: '👋', color: '#4ade80', desc: 'Primer mensaje — el usuario acaba de escribir por primera vez' },
+  { key: 'EXPLORING', label: 'Exploración',      icon: '🔍', color: '#60a5fa', desc: 'El usuario pregunta sobre servicios sin mostrar interés claro aún' },
+  { key: 'CAPTURING', label: 'Captura de lead',  icon: '🎯', color: '#FBBF24', desc: 'El usuario mostró interés — el bot recoge nombre, negocio, necesidad, plazo y presupuesto' },
+  { key: 'DONE',      label: 'Completado',       icon: '✅', color: '#a78bfa', desc: 'Lead guardado — el bot confirma y no vuelve a pedir datos' },
+  { key: 'SUPPORT',   label: 'Soporte',          icon: '🔧', color: '#fb923c', desc: 'El usuario es cliente existente o reporta un problema técnico' },
+  { key: 'SLEEPING',  label: 'Fuera de horario', icon: '🌙', color: '#94a3b8', desc: 'Mensaje recibido fuera del horario de atención configurado' },
+]
+
+function ModeCard({
+  mode, value, onChange,
+}: {
+  mode: typeof MODES_INFO[0]
+  value: string
+  onChange: (v: string) => void
+}) {
+  const [open, setOpen] = useState(false)
+  const hasCustom = value.trim().length > 0
+
   return (
-    <div className="space-y-6">
+    <div
+      className="border rounded-xl overflow-hidden transition-all"
+      style={{ borderColor: open ? mode.color + '33' : '#1E1E1E', background: open ? '#0d0d0d' : '#111' }}
+    >
+      <button
+        onClick={() => setOpen(!open)}
+        className="w-full flex items-center gap-3 px-4 py-3 text-left"
+      >
+        <span className="text-base">{mode.icon}</span>
+        <div className="flex-1">
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-[#f5f5f5]" style={{ fontWeight: 600 }}>{mode.label}</span>
+            {hasCustom && (
+              <span className="px-1.5 py-0.5 rounded text-[9px] uppercase tracking-wide" style={{ background: mode.color + '22', color: mode.color, fontWeight: 700 }}>
+                personalizado
+              </span>
+            )}
+          </div>
+          <p className="text-[10px] text-[#444] mt-0.5">{mode.desc}</p>
+        </div>
+        <span className="text-[#333] text-xs">{open ? '▼' : '▶'}</span>
+      </button>
+
+      {open && (
+        <div className="px-4 pb-4">
+          <Textarea
+            value={value}
+            onChange={onChange}
+            placeholder={`Instrucciones para el modo ${mode.label}. Si está vacío se usa el comportamiento por defecto del motor.`}
+            rows={6}
+          />
+          {hasCustom && (
+            <button
+              onClick={() => onChange('')}
+              className="mt-2 text-[10px] text-[#444] hover:text-red-400 transition-colors"
+            >
+              Restaurar por defecto
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function TabAvanzado({ cfg, setCfg }: { cfg: Partial<BotConfig>; setCfg: (c: Partial<BotConfig>) => void }) {
+  function updateModeInstruction(key: string, value: string) {
+    const current = (cfg.mode_instructions || {}) as Record<string, string>
+    setCfg({ ...cfg, mode_instructions: { ...current, [key]: value } })
+  }
+
+  return (
+    <div className="space-y-8">
       <div className="p-4 bg-amber-500/5 border border-amber-500/20 rounded-xl">
         <p className="text-xs text-amber-400/80">⚠️ Configuración avanzada — solo para el Plan Dual. Cambios aquí afectan directamente el comportamiento del motor de IA.</p>
       </div>
 
-      <Field label="Máximo de intercambios capturando lead" hint="Cuántas respuestas del bot antes de cerrar y guardar el lead aunque no esté completo">
-        <input
-          type="number"
-          min={3} max={20}
-          className="w-32 bg-[#161616] border border-[#242424] rounded-lg px-3 py-2.5 text-sm text-[#f5f5f5] focus:outline-none focus:border-amber-500/40 transition-colors"
-          value={(cfg as Record<string, unknown>).max_capturing_exchanges as number || 8}
-          onChange={e => setCfg({ ...cfg, max_capturing_exchanges: parseInt(e.target.value) } as Partial<BotConfig>)}
-        />
-      </Field>
+      {/* Contadores */}
+      <div className="space-y-4">
+        <h3 className="text-xs text-[#555] uppercase tracking-widest">Límites de captura</h3>
+        <div className="grid grid-cols-2 gap-4">
+          <Field label="Máximo intercambios en captura" hint="Respuestas del bot antes de cerrar y guardar el lead">
+            <input
+              type="number" min={3} max={20}
+              className="w-full bg-[#161616] border border-[#242424] rounded-lg px-3 py-2.5 text-sm text-[#f5f5f5] focus:outline-none focus:border-amber-500/40 transition-colors"
+              value={(cfg as Record<string, unknown>).max_capturing_exchanges as number || 8}
+              onChange={e => setCfg({ ...cfg, max_capturing_exchanges: parseInt(e.target.value) } as Partial<BotConfig>)}
+            />
+          </Field>
+          <Field label="Límite absoluto" hint="El bot cierra sí o sí al llegar aquí">
+            <input
+              type="number" min={5} max={30}
+              className="w-full bg-[#161616] border border-[#242424] rounded-lg px-3 py-2.5 text-sm text-[#f5f5f5] focus:outline-none focus:border-amber-500/40 transition-colors"
+              value={(cfg as Record<string, unknown>).hard_cap_exchanges as number || 14}
+              onChange={e => setCfg({ ...cfg, hard_cap_exchanges: parseInt(e.target.value) } as Partial<BotConfig>)}
+            />
+          </Field>
+        </div>
+      </div>
 
-      <Field label="Límite absoluto de intercambios" hint="El bot cierra la conversación sí o sí al llegar aquí, sin importar los datos recopilados">
-        <input
-          type="number"
-          min={5} max={30}
-          className="w-32 bg-[#161616] border border-[#242424] rounded-lg px-3 py-2.5 text-sm text-[#f5f5f5] focus:outline-none focus:border-amber-500/40 transition-colors"
-          value={(cfg as Record<string, unknown>).hard_cap_exchanges as number || 14}
-          onChange={e => setCfg({ ...cfg, hard_cap_exchanges: parseInt(e.target.value) } as Partial<BotConfig>)}
-        />
-      </Field>
+      {/* Instrucciones por modo */}
+      <div className="space-y-3">
+        <div>
+          <h3 className="text-xs text-[#555] uppercase tracking-widest">Instrucciones por modo (GPT)</h3>
+          <p className="text-[10px] text-[#333] mt-1">Personaliza cómo responde GPT en cada etapa. Si está vacío usa el comportamiento por defecto.</p>
+        </div>
+        <div className="space-y-2">
+          {MODES_INFO.map(mode => (
+            <ModeCard
+              key={mode.key}
+              mode={mode}
+              value={((cfg.mode_instructions || {}) as Record<string, string>)[mode.key] || ''}
+              onChange={v => updateModeInstruction(mode.key, v)}
+            />
+          ))}
+        </div>
+      </div>
 
-      <Field label="Prompt de análisis (DeepSeek)" hint="El primer motor — analiza la intención del mensaje y clasifica el modo de la conversación">
-        <Textarea
-          value={(cfg as Record<string, string>).analyze_prompt || ''}
-          onChange={v => setCfg({ ...cfg, analyze_prompt: v } as Partial<BotConfig>)}
-          placeholder="Prompt del analizador DeepSeek..."
-          rows={8}
-        />
-      </Field>
+      {/* Prompts completos */}
+      <div className="space-y-4">
+        <h3 className="text-xs text-[#555] uppercase tracking-widest">Prompts completos</h3>
 
-      <Field label="Prompt de respuesta (GPT)" hint="El segundo motor — genera la respuesta basándose en el análisis previo">
-        <Textarea
-          value={cfg.system_prompt || ''}
-          onChange={v => setCfg({ ...cfg, system_prompt: v })}
-          placeholder="Prompt del generador GPT..."
-          rows={8}
-        />
-      </Field>
+        <Field label="Prompt de análisis (DeepSeek)" hint="El primer motor — analiza la intención y clasifica el modo de la conversación">
+          <Textarea
+            value={(cfg as Record<string, string>).analyze_prompt || ''}
+            onChange={v => setCfg({ ...cfg, analyze_prompt: v } as Partial<BotConfig>)}
+            placeholder="Prompt del analizador DeepSeek (JSON-only analyzer)..."
+            rows={8}
+          />
+        </Field>
+
+        <Field label="Prompt de respuesta (GPT)" hint="El segundo motor — genera la respuesta. Las instrucciones por modo de arriba se agregan automáticamente.">
+          <Textarea
+            value={cfg.system_prompt || ''}
+            onChange={v => setCfg({ ...cfg, system_prompt: v })}
+            placeholder="Prompt del generador GPT (personalidad, negocio, servicios, reglas)..."
+            rows={8}
+          />
+        </Field>
+      </div>
     </div>
   )
 }

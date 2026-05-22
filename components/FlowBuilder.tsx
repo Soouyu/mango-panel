@@ -110,55 +110,65 @@ function MenuNode({ data, selected }: NodeProps) {
   const hasMsg = !!d.message
 
   return (
-    <div
-      className={`min-w-[240px] rounded-xl border overflow-hidden transition-all ${nodeBorder(selected)}`}
-      style={{ background: '#0a0a0a', boxShadow: nodeGlow(selected) }}
-    >
+    <div className="relative min-w-[240px]">
+      {/* Target handle (entrada) */}
       <Handle type="target" position={Position.Top} style={HS} />
 
-      {/* Header — MH px */}
-      <div className="px-3 py-2 flex items-center gap-2 border-b border-[#1a1a1a]">
-        <span className="text-[11px]">📋</span>
-        <span className="text-[10px] font-600 text-blue-400 uppercase tracking-widest">Menú</span>
-        {d.label && <span className="ml-auto text-[10px] text-[#3a3a3a] truncate max-w-[90px]">{d.label}</span>}
-      </div>
-
-      {/* Message — MM px */}
-      {hasMsg && (
-        <div className="px-3 py-2 border-b border-[#141414]">
-          <p className="text-xs text-[#666] truncate">{d.message}</p>
+      {/* Caja con overflow-hidden para clipping visual */}
+      <div
+        className={`rounded-xl border overflow-hidden transition-all ${nodeBorder(selected)}`}
+        style={{ background: '#0a0a0a', boxShadow: nodeGlow(selected) }}
+      >
+        {/* Header — MH px */}
+        <div className="px-3 py-2 flex items-center gap-2 border-b border-[#1a1a1a]">
+          <span className="text-[11px]">📋</span>
+          <span className="text-[10px] font-600 text-blue-400 uppercase tracking-widest">Menú</span>
+          {d.label && <span className="ml-auto text-[10px] text-[#3a3a3a] truncate max-w-[90px]">{d.label}</span>}
         </div>
-      )}
 
-      {/* Options */}
-      <div style={{ paddingTop: MP, paddingBottom: 8 }}>
-        {d.options.length === 0 && (
-          <div style={{ height: MO }} className="px-3 flex items-center">
-            <p className="text-[10px] text-[#3a3a3a] italic">Sin opciones — selecciona para editar</p>
+        {/* Message — MM px */}
+        {hasMsg && (
+          <div className="px-3 py-2 border-b border-[#141414]">
+            <p className="text-xs text-[#666] truncate">{d.message}</p>
           </div>
         )}
-        {d.options.map((opt, i) => (
-          <div
-            key={opt.id}
-            style={{ height: MO }}
-            className="px-3 flex items-center gap-2 relative"
-          >
-            <span className="text-[10px] text-amber-500 w-4 shrink-0" style={{ fontWeight: 700 }}>{i + 1}.</span>
-            <span className="text-xs text-[#ccc] truncate flex-1 pr-4">{opt.label || `Opción ${i + 1}`}</span>
-            <Handle
-              type="source"
-              position={Position.Right}
-              id={opt.id}
-              style={{
-                ...HS,
-                top: MH + (hasMsg ? MM : 0) + MP + i * MO + MO / 2,
-                bottom: 'auto',
-                right: -5,
-              }}
-            />
-          </div>
-        ))}
+
+        {/* Options */}
+        <div style={{ paddingTop: MP, paddingBottom: 8 }}>
+          {d.options.length === 0 && (
+            <div style={{ height: MO }} className="px-3 flex items-center">
+              <p className="text-[10px] text-[#3a3a3a] italic">Sin opciones — selecciona para editar</p>
+            </div>
+          )}
+          {d.options.map((opt, i) => (
+            <div
+              key={opt.id}
+              style={{ height: MO }}
+              className="px-3 flex items-center gap-2"
+            >
+              <span className="text-[10px] text-amber-500 w-4 shrink-0" style={{ fontWeight: 700 }}>{i + 1}.</span>
+              <span className="text-xs text-[#ccc] truncate flex-1 pr-4">{opt.label || `Opción ${i + 1}`}</span>
+            </div>
+          ))}
+        </div>
       </div>
+
+      {/* Source handles — FUERA del overflow-hidden para que no se corten */}
+      {d.options.map((opt, i) => (
+        <Handle
+          key={`h-${opt.id}`}
+          type="source"
+          position={Position.Right}
+          id={opt.id}
+          style={{
+            ...HS,
+            position: 'absolute',
+            top: MH + (hasMsg ? MM : 0) + MP + i * MO + MO / 2 - HS.height / 2,
+            right: -HS.width / 2,
+            transform: 'none',
+          }}
+        />
+      ))}
     </div>
   )
 }

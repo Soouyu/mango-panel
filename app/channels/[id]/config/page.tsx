@@ -10,7 +10,7 @@ import { getToken } from '@/lib/auth'
 const BASE = process.env.NEXT_PUBLIC_API_URL || ''
 
 const PLAN_INFO = {
-  flow:  { label: 'Plan Flujo',  desc: 'Sin IA — menús y respuestas predefinidas', color: '#888',    tabs: ['general', 'flujo', 'horarios'] },
+  flow:  { label: 'Plan Flujo',  desc: 'Sin IA — menús y respuestas predefinidas', color: '#888888', tabs: ['general', 'flujo', 'horarios'] },
   agent: { label: 'Plan Agente', desc: 'Un motor de IA — lenguaje natural',         color: '#FBBF24', tabs: ['general', 'personalidad', 'respuestas', 'horarios'] },
   dual:  { label: 'Plan Dual',   desc: 'Dos motores de IA — máxima precisión',      color: '#a78bfa', tabs: ['general', 'personalidad', 'respuestas', 'horarios', 'avanzado'] },
 }

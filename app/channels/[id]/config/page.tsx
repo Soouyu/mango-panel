@@ -100,20 +100,30 @@ function TabGeneral({ cfg, setCfg, channel, onToggleStatus, toggling }: {
       {/* Plan */}
       <Field label="Plan del bot" hint="Cambiar el plan modifica cómo el bot procesa los mensajes">
         <div className="grid grid-cols-3 gap-3">
-          {(Object.entries(PLAN_INFO) as [keyof typeof PLAN_INFO, typeof PLAN_INFO[keyof typeof PLAN_INFO]][]).map(([key, info]) => (
-            <button
-              key={key}
-              onClick={() => setCfg({ ...cfg, bot_type: key })}
-              className="p-3 rounded-xl border text-left transition-all"
-              style={{
-                background: cfg.bot_type === key ? `${info.color}11` : '#111',
-                border: `1px solid ${cfg.bot_type === key ? info.color + '55' : '#1E1E1E'}`,
-              }}
-            >
-              <p className="text-xs mb-1" style={{ color: info.color, fontWeight: 600 }}>{info.label}</p>
-              <p className="text-[10px] text-[#555] leading-relaxed">{info.desc}</p>
-            </button>
-          ))}
+          {(Object.entries(PLAN_INFO) as [keyof typeof PLAN_INFO, typeof PLAN_INFO[keyof typeof PLAN_INFO]][]).map(([key, info]) => {
+            const isSelected = cfg.bot_type === key
+            return (
+              <button
+                key={key}
+                onClick={() => setCfg({ ...cfg, bot_type: key })}
+                className="p-3 rounded-xl text-left transition-all relative"
+                style={{
+                  background: isSelected ? `${info.color}1f` : '#111',
+                  border: `2px solid ${isSelected ? info.color : '#1E1E1E'}`,
+                  boxShadow: isSelected ? `0 0 0 1px ${info.color}33, 0 4px 18px ${info.color}1a` : 'none',
+                }}
+              >
+                {isSelected && (
+                  <span
+                    className="absolute top-2 right-2 w-2 h-2 rounded-full"
+                    style={{ background: info.color, boxShadow: `0 0 8px ${info.color}` }}
+                  />
+                )}
+                <p className="text-xs mb-1" style={{ color: info.color, fontWeight: 600 }}>{info.label}</p>
+                <p className="text-[10px] text-[#555] leading-relaxed">{info.desc}</p>
+              </button>
+            )
+          })}
         </div>
       </Field>
 

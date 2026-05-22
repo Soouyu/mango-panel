@@ -10,13 +10,14 @@ import { getToken } from '@/lib/auth'
 const BASE = process.env.NEXT_PUBLIC_API_URL || ''
 
 const PLAN_INFO = {
-  flow:  { label: 'Plan Flujo',  desc: 'Sin IA — menús y respuestas predefinidas', color: '#888',    tabs: ['general', 'horarios'] },
+  flow:  { label: 'Plan Flujo',  desc: 'Sin IA — menús y respuestas predefinidas', color: '#888',    tabs: ['general', 'flujo', 'horarios'] },
   agent: { label: 'Plan Agente', desc: 'Un motor de IA — lenguaje natural',         color: '#FBBF24', tabs: ['general', 'personalidad', 'respuestas', 'horarios'] },
   dual:  { label: 'Plan Dual',   desc: 'Dos motores de IA — máxima precisión',      color: '#a78bfa', tabs: ['general', 'personalidad', 'respuestas', 'horarios', 'avanzado'] },
 }
 
 const TAB_LABELS: Record<string, string> = {
   general:      'General',
+  flujo:        'Flujo',
   personalidad: 'Personalidad',
   respuestas:   'Respuestas',
   horarios:     'Horarios',
@@ -278,6 +279,72 @@ function TabRespuestas({ cfg, setCfg }: { cfg: Partial<BotConfig>; setCfg: (c: P
             </Field>
           </div>
         )}
+      </div>
+    </div>
+  )
+}
+
+function TabFlujo({ channelId, cfg }: { channelId: string; cfg: Partial<BotConfig> }) {
+  const flow = cfg.flow_definition
+  const nodeCount = flow?.nodes?.length || 0
+  const edgeCount = flow?.edges?.length || 0
+  const hasFlow = nodeCount > 1 // más que solo el nodo start
+
+  return (
+    <div className="space-y-6">
+      <div className="p-5 bg-[#0d0d0d] border border-[#1E1E1E] rounded-xl">
+        <div className="flex items-start gap-4">
+          <div className="w-12 h-12 rounded-xl bg-[#1a1200] border border-amber-500/20 flex items-center justify-center text-2xl shrink-0">
+            🌳
+          </div>
+          <div className="flex-1">
+            <h3 className="text-sm text-[#f5f5f5] mb-1" style={{ fontWeight: 600 }}>Editor de flujo visual</h3>
+            <p className="text-xs text-[#666] leading-relaxed">
+              Plan Flujo no usa IA — sigue un árbol de mensajes y opciones que tú armas visualmente.
+              Cada nodo es un paso de la conversación: mensajes, menús con opciones, acciones (capturar lead, finalizar, transferir a humano).
+            </p>
+          </div>
+        </div>
+
+        {hasFlow && (
+          <div className="mt-5 pt-5 border-t border-[#1a1a1a] grid grid-cols-2 gap-4">
+            <div>
+              <p className="text-[10px] text-[#444] uppercase tracking-widest mb-1">Nodos</p>
+              <p className="text-lg text-[#f5f5f5]" style={{ fontWeight: 600 }}>{nodeCount}</p>
+            </div>
+            <div>
+              <p className="text-[10px] text-[#444] uppercase tracking-widest mb-1">Conexiones</p>
+              <p className="text-lg text-[#f5f5f5]" style={{ fontWeight: 600 }}>{edgeCount}</p>
+            </div>
+          </div>
+        )}
+
+        {!hasFlow && (
+          <div className="mt-5 p-3 bg-amber-500/5 border border-amber-500/20 rounded-lg">
+            <p className="text-xs text-amber-400/80">
+              ⚠️ Tu flujo aún está vacío. Sin nodos configurados, el bot solo responderá "Este canal no tiene flujo configurado".
+            </p>
+          </div>
+        )}
+
+        <Link
+          href={`/channels/${channelId}/flow`}
+          className="mt-5 flex items-center justify-center gap-2 w-full px-5 py-3 rounded-lg text-sm transition-all"
+          style={{ background: '#F59E0B', color: '#000', fontWeight: 600 }}
+        >
+          {hasFlow ? 'Editar flujo →' : 'Crear flujo →'}
+        </Link>
+      </div>
+
+      <div className="space-y-3">
+        <h4 className="text-xs text-[#555] uppercase tracking-widest">Cómo armar un flujo</h4>
+        <div className="space-y-2 text-xs text-[#666] leading-relaxed">
+          <p><span className="text-amber-500">1.</span> Arranca desde el nodo <strong className="text-[#888]">Inicio</strong> (verde, ya existe)</p>
+          <p><span className="text-amber-500">2.</span> Agrega un <strong className="text-[#888]">Mensaje</strong> de bienvenida y conéctalo al Inicio</p>
+          <p><span className="text-amber-500">3.</span> Agrega un <strong className="text-[#888]">Menú</strong> con opciones (ej: "1. Ver servicios", "2. Hablar con humano")</p>
+          <p><span className="text-amber-500">4.</span> Cada opción del menú puede llevar a otro mensaje, menú o acción</p>
+          <p><span className="text-amber-500">5.</span> Usa <strong className="text-[#888]">Acciones</strong> para capturar lead, finalizar o pasar a humano</p>
+        </div>
       </div>
     </div>
   )
@@ -621,6 +688,7 @@ export default function ConfigPage({ params }: { params: Promise<{ id: string }>
 
             {/* Tab content */}
             {tab === 'general'      && channel && <TabGeneral      cfg={cfg} setCfg={setCfg} channel={channel} onToggleStatus={toggleStatus} toggling={toggling} />}
+            {tab === 'flujo'        && <TabFlujo        channelId={id} cfg={cfg} />}
             {tab === 'personalidad' && <TabPersonalidad cfg={cfg} setCfg={setCfg} />}
             {tab === 'respuestas'   && <TabRespuestas   cfg={cfg} setCfg={setCfg} />}
             {tab === 'horarios'     && <TabHorarios     cfg={cfg} setCfg={setCfg} />}

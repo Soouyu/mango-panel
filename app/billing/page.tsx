@@ -42,7 +42,8 @@ function fmtDate(s: string) {
 // ── Components ────────────────────────────────────────────────────────────────
 
 function BalanceCard({ balance }: { balance: CreditsBalance }) {
-  const creditsInUsd = balance.credits_balance / balance.credits_per_usd
+  const creditsInUsd  = balance.credits_balance / balance.credits_per_usd
+  const consumedInUsd = balance.total_consumed   / balance.credits_per_usd
   const isLow = creditsInUsd < 5
 
   return (
@@ -71,7 +72,7 @@ function BalanceCard({ balance }: { balance: CreditsBalance }) {
         </div>
         <div>
           <p className="text-[10px] text-[#444] uppercase tracking-widest mb-0.5">Total consumido</p>
-          <p className="text-sm text-[#ccc]">{fmtUsd(balance.total_consumed)}</p>
+          <p className="text-sm text-[#ccc]">{fmtUsd(consumedInUsd)}</p>
         </div>
       </div>
     </div>

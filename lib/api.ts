@@ -89,7 +89,68 @@ export async function saveBotConfig(channelId: string, config: Partial<BotConfig
   })
 }
 
+// ── Credits ──────────────────────────────────────────────────────────────────
+export async function getCreditsBalance() {
+  return request<{ data: CreditsBalance }>('/api/credits/balance')
+}
+
+export async function getCreditsStats() {
+  return request<{ data: CreditsStats }>('/api/credits/stats')
+}
+
+export async function rechargeCredits(amount: number, payment_method = 'manual', reference?: string, notes?: string) {
+  return request<{ data: { purchase: CreditPurchase; credits_added: number } }>('/api/credits/recharge', {
+    method: 'POST',
+    body: JSON.stringify({ amount, payment_method, reference, notes }),
+  })
+}
+
+export async function getCreditsHistory(type: 'usage' | 'purchases' = 'usage', limit = 50) {
+  return request<{ data: UsageLog[] | CreditPurchase[] }>(`/api/credits/history?type=${type}&limit=${limit}`)
+}
+
 // ── Types ─────────────────────────────────────────────────────────────────────
+
+export interface CreditsBalance {
+  credits_balance: number
+  total_purchased: number
+  total_consumed: number
+  pricing: Record<string, { credits_per_msg: number; est_cost_usd: number }>
+  credits_per_usd: number
+  packs: { amount: number; credits: number; bonus: number; label: string }[]
+}
+
+export interface CreditsStats {
+  balance: { credits_balance: number; total_purchased: number; total_consumed: number }
+  this_month: {
+    messages: number
+    credits: number
+    cost: number
+    by_plan: Record<string, number>
+  }
+}
+
+export interface CreditPurchase {
+  id:             string
+  amount:         number
+  credits_added:  number
+  payment_method: string
+  payment_reference?: string
+  status:         string
+  notes?:         string
+  created_at:     string
+}
+
+export interface UsageLog {
+  id:               string
+  channel_id?:      string
+  conversation_id?: string
+  plan_type?:       string
+  credits_charged:  number
+  cost_estimate_usd: number
+  created_at:       string
+}
+
 export interface DashboardStats {
   leads:         { total: number; thisMonth: number; fullProfile: number }
   conversations: { total: number; active: number; takeover: number; done: number }

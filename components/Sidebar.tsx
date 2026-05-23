@@ -8,6 +8,7 @@ const NAV = [
   { href: '/channels',      label: 'Canales',          icon: ChannelsIcon },
   { href: '/leads',         label: 'Leads',            icon: UsersIcon },
   { href: '/conversations', label: 'Conversaciones',   icon: ChatIcon },
+  { href: '/billing',       label: 'Facturación',      icon: BillingIcon },
 ]
 
 export default function Sidebar() {
@@ -86,6 +87,16 @@ function ChannelsIcon({ size = 16, className = '' }) {
       <rect x="1" y="5" width="4" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.5"/>
       <rect x="6" y="2" width="4" height="12" rx="1.5" stroke="currentColor" strokeWidth="1.5"/>
       <rect x="11" y="4" width="4" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.5"/>
+    </svg>
+  )
+}
+
+function BillingIcon({ size = 16, className = '' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 16 16" fill="none" className={className}>
+      <rect x="1.5" y="3.5" width="13" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.5"/>
+      <path d="M1.5 6.5h13" stroke="currentColor" strokeWidth="1.5"/>
+      <path d="M4 9.5h2M8 9.5h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
     </svg>
   )
 }
